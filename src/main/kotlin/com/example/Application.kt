@@ -12,10 +12,6 @@ import io.ktor.server.netty.*
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "localhost") { // 서버 생성
-        configureRouting()
         configureSockets()
-        configureSerialization()
     }.start(wait = true)
-
-
 }

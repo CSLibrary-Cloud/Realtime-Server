@@ -1,6 +1,6 @@
 package com.example.plugins
 
-import com.example.UserConfigurer
+import com.example.data.UserConfigurer
 import io.ktor.application.Application
 import io.ktor.client.*
 import io.ktor.routing.*

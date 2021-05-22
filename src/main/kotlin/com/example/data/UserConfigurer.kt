@@ -1,4 +1,4 @@
-package com.example
+package com.example.data
 
 import com.example.data.FindUserRequest
 import com.example.data.KickUserByToken
