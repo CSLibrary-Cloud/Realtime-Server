@@ -1,28 +1,26 @@
 package com.example
 
-import io.ktor.routing.*
-import io.ktor.http.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.websocket.*
-import java.time.*
-import io.ktor.jackson.*
-import com.fasterxml.jackson.databind.*
-import io.ktor.features.*
-import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import com.example.plugins.*
-import kotlin.test.*
-import io.ktor.server.testing.*
+import io.ktor.client.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class ApplicationTest {
-    @Test
-    fun testRoot() {
-        withTestApplication({ configureRouting() }) {
-            handleRequest(HttpMethod.Get, "/").apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals("Hello World!", response.content)
-            }
-        }
+    private lateinit var server: NettyApplicationEngine
+    private val httpClient: HttpClient = HttpClient()
+
+    @BeforeEach
+    fun init() {
+        server = embeddedServer(Netty, port = 8081, host = "localhost") { // 서버 생성
+            configureSockets()
+        }.start(wait = true)
+    }
+
+    @AfterEach
+    fun destroy() {
+        server.stop(500, 500)
     }
 }
