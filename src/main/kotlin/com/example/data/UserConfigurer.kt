@@ -57,14 +57,13 @@ class UserConfigurer(
 
     // Called when client disconnects disrespectfully - Save and kick
     suspend fun handleForceDisconnection() {
-        client.post<Void>("${baseUrl}/api/v1/realtime/kick") {
-            contentType(ContentType.Application.Json)
-            body = KickUserByToken(
+        WebSocketServer.requestToMainServer<KickUserByToken, Void>("${baseUrl}/api/v1/realtime/kick",
+            KickUserByToken(
                 userToken = userToken,
                 isTimeout = false,
                 user = currentUser
             )
-        }
+        )
     }
 
     // Setup countdown Timer
