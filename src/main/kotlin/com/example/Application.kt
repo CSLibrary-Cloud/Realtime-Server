@@ -11,7 +11,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "localhost") { // 서버 생성
+    embeddedServer(Netty, port = 8081, host = "localhost") { // 서버 생성
         configureSockets()
     }.start(wait = true)
 }
