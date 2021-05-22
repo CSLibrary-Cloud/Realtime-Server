@@ -7,7 +7,7 @@ import io.ktor.http.cio.websocket.*
 import java.time.Duration
 
 object WebSocketServer {
-    val baseUrl: String = "http://localhost:8080"
+    const val baseUrl: String = "http://localhost:8080"
     // Init WebSocket
     fun initializeWebSocket(application: Application) {
         application.install(io.ktor.websocket.WebSockets) {
