@@ -1,8 +1,5 @@
 package com.example.data
 
-import com.example.data.FindUserRequest
-import com.example.data.KickUserByToken
-import com.example.data.User
 import com.example.plugins.WebSocketServer
 import com.example.plugins.WebSocketServer.baseUrl
 import com.example.plugins.client
