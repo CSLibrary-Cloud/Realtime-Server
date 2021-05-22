@@ -11,12 +11,17 @@ import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class UserConfigurer(
     private val session: DefaultWebSocketSession // Constructor Injection
 ) {
     // Current Session User
     private lateinit var currentUser: User
+
+    // Mutex
+    private val mutexLock: Mutex = Mutex()
 
     // User Token [By Lazy]
     private val userToken: String by lazy {
@@ -81,7 +86,9 @@ class UserConfigurer(
     // Count down timer and notify to client
     private suspend fun countDown(sender: SendChannel<Frame>) {
         delay(1000)
-        currentUser.leftTime--
+        mutexLock.withLock {
+            currentUser.leftTime--
+        }
         sender.send(Frame.Text("Hello!"))
     }
 
@@ -117,10 +124,12 @@ class UserConfigurer(
     // Handle Extension
     private suspend fun handleExtendConnection() {
         // TODO: LOCK AND SYNCHRONIZATION NEEDED
-        if (currentUser.leftTime >= 60 * 60) {
-            currentUser.leftTime += 60 * 60 * 2
-        } else {
-            session.outgoing.send(Frame.Text("Cannot extend time!"))
+        mutexLock.withLock {
+            if (currentUser.leftTime >= 60 * 60) {
+                currentUser.leftTime += 60 * 60 * 2
+            } else {
+                session.outgoing.send(Frame.Text("Cannot extend time!"))
+            }
         }
     }
 }
