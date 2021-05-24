@@ -1,10 +1,6 @@
 package com.example.data
 
 import com.example.plugins.WebSocketServer
-import com.example.plugins.WebSocketServer.baseUrl
-import com.example.plugins.client
-import io.ktor.client.request.*
-import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
@@ -12,7 +8,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class UserConfigurer(
-    private val session: DefaultWebSocketSession // Constructor Injection
+    private val session: DefaultWebSocketSession, // Constructor Injection
+    private val webSocketServer: WebSocketServer
 ) {
     // Current Session User
     private lateinit var currentUser: User
@@ -23,7 +20,7 @@ class UserConfigurer(
     // User Token [By Lazy]
     private val userToken: String by lazy {
         runBlocking {
-            WebSocketServer.getUserToken(session)
+            webSocketServer.getUserToken(session)
         }
     }
 
@@ -33,9 +30,11 @@ class UserConfigurer(
     // Handle client message while executing timer
     suspend fun waitForClientMessage(): Boolean {
         while (session.isActive) {
+            println("Reached Here")
             when (val frame: Frame = session.incoming.receive()) {
                 is Frame.Text -> {
                     val incomingText: String = frame.readText()
+                    println("Message: $incomingText")
                     handleClientMessage(incomingText)
                 }
             }
@@ -47,23 +46,13 @@ class UserConfigurer(
     // Initialize current user and start timer.
     suspend fun setup() {
         // Setup User
-        currentUser = WebSocketServer.requestToMainServer("${baseUrl}/api/v1/realtime/user",
+        println("Handling")
+        currentUser = webSocketServer.requestToMainServerGet("${webSocketServer.baseUrl}/api/v1/realtime/user",
             FindUserRequest(userToken)
         )
 
         // Setup Timer
         setupTimer()
-    }
-
-    // Called when client disconnects disrespectfully - Save and kick
-    suspend fun handleForceDisconnection() {
-        WebSocketServer.requestToMainServer<KickUserByToken, Void>("${baseUrl}/api/v1/realtime/kick",
-            KickUserByToken(
-                userToken = userToken,
-                isTimeout = false,
-                user = currentUser
-            )
-        )
     }
 
     // Setup countdown Timer
@@ -85,7 +74,7 @@ class UserConfigurer(
         mutexLock.withLock {
             currentUser.leftTime--
         }
-        sender.send(Frame.Text("Hello!"))
+        sender.send(Frame.Text("Left: ${currentUser.leftTime}"))
     }
 
     // When Timeout occurs, this will be called and it will automatically kick out the user.
@@ -94,11 +83,22 @@ class UserConfigurer(
         sender.send(Frame.Text("Your time has been expired!"))
 
         // Kick[Timeout]
-        WebSocketServer.requestToMainServer<KickUserByToken, Void>(
-            "${baseUrl}/api/v1/realtime/kick",
+        webSocketServer.requestToMainServerPost<KickUserByToken, Void>(
+            "${webSocketServer.baseUrl}/api/v1/realtime/kick",
             KickUserByToken(
                 userToken = userToken,
                 isTimeout = true
+            )
+        )
+    }
+
+    // Called when client disconnects disrespectfully - Save and kick
+    suspend fun handleForceDisconnection() {
+        webSocketServer.requestToMainServerPost<KickUserByToken, String>("${webSocketServer.baseUrl}/api/v1/realtime/kick",
+            KickUserByToken(
+                userToken = userToken,
+                isTimeout = false,
+                user = currentUser
             )
         )
     }
@@ -114,6 +114,7 @@ class UserConfigurer(
     // Handle Session Close
     private suspend fun handleCloseConnection() {
         timerJob.cancelAndJoin()
+        handleForceDisconnection()
         session.close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
     }
 

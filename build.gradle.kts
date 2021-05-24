@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.mongodb:mongo-java-driver:3.4.1")
+    implementation("org.mongodb:mongo-java-driver:3.12.8")
     implementation("io.ktor:ktor-client-websockets:1.5.4")
     implementation("io.ktor:ktor-client-cio:1.5.4")
 
@@ -28,6 +28,8 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
+    implementation("io.ktor:ktor-client-mock:$ktor_version")
+    implementation("io.ktor:ktor-client-jackson:$ktor_version")
     testImplementation(kotlin("test-junit"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")

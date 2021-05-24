@@ -1,13 +1,17 @@
 package com.example.plugins
 
 import io.ktor.application.*
+import io.ktor.client.*
+import io.ktor.client.features.json.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import java.time.Duration
 
-object WebSocketServer {
-    const val baseUrl: String = "http://localhost:8080"
+class WebSocketServer(
+    val client: HttpClient
+) {
+    val baseUrl: String = "http://localhost:8080"
     // Init WebSocket
     fun initializeWebSocket(application: Application) {
         application.install(io.ktor.websocket.WebSockets) {
@@ -27,8 +31,15 @@ object WebSocketServer {
     }
 
     // Main Server Request[A Communicator with HTTP Server]
-    suspend inline fun <REQ, reified RESPONSE> requestToMainServer(address: String, requestBody: REQ): RESPONSE {
+    suspend inline fun <REQ, reified RESPONSE> requestToMainServerGet(address: String, requestBody: REQ): RESPONSE {
         return client.get<RESPONSE>(address) {
+            contentType(ContentType.Application.Json)
+            body = requestBody!!
+        }
+    }
+
+    suspend inline fun <REQ, reified RESPONSE> requestToMainServerPost(address: String, requestBody: REQ): RESPONSE {
+        return client.post<RESPONSE>(address) {
             contentType(ContentType.Application.Json)
             body = requestBody!!
         }

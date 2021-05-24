@@ -6,15 +6,15 @@ import io.ktor.client.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
 
-val client: HttpClient = HttpClient()
-
-fun Application.configureSockets() {
+fun Application.configureSockets(client: HttpClient) {
     // Init Socket
-    WebSocketServer.initializeWebSocket(this)
+    val webSocketServer: WebSocketServer = WebSocketServer(client).apply {
+        initializeWebSocket(this@configureSockets)
+    }
 
     routing {
         webSocket("/realtime/endpoint") {
-            val userConfigurer: UserConfigurer = UserConfigurer(this)
+            val userConfigurer: UserConfigurer = UserConfigurer(this, webSocketServer)
             runCatching {
                 // This will start timer
                 userConfigurer.setup()
@@ -23,6 +23,8 @@ fun Application.configureSockets() {
                 userConfigurer.waitForClientMessage()
             }.onFailure {
                 // Force Close Handle
+                println("Client exited abnormally!!")
+                println("Debug Trace: ${it.stackTraceToString()}")
                 userConfigurer.handleForceDisconnection()
             }
         }

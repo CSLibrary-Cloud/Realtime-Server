@@ -6,9 +6,7 @@ enum class UserState {
     BREAK, EXIT, START
 }
 
-
 data class User(
-    var id: ObjectId = ObjectId(),
     var userId: String = "",
     var userPassword: String = "",
     var userName: String = "",
